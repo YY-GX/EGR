@@ -10,7 +10,8 @@ import HighlightedSection from "./components/HighlightedSection.astro";
 import Figure from "./components/Figure.astro";
 import Picture from "./components/Picture.astro";
 import TwoColumns from "./components/TwoColumns.astro";
-import VideoPlaceholder from "./components/VideoPlaceholder.astro";
+import Video from "./components/Video.astro";
+import VideoGrid from "./components/VideoGrid.astro";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/starwind/tabs";
 
 import teaser from "./assets/teaser.png";
@@ -23,15 +24,40 @@ import realResults from "./assets/real-results.png";
   authors={[
     {
       name: "Yue Yang",
-      url: "mailto:yygx@cs.unc.edu",
+      url: "https://yy-gx.github.io/",
       institution: "UNC Chapel Hill",
       notes: ["1", "†"],
     },
-    { name: "Diego Romeres", institution: "MERL", notes: ["2"] },
-    { name: "Chiori Hori", institution: "MERL", notes: ["2"] },
-    { name: "Gedas Bertasius", institution: "UNC Chapel Hill", notes: ["1"] },
-    { name: "Daniel Szafir", institution: "UNC Chapel Hill", notes: ["1"] },
-    { name: "Siddarth Jain", institution: "MERL", notes: ["2"] },
+    {
+      name: "Diego Romeres",
+      url: "https://www.merl.com/people/romeres",
+      institution: "MERL",
+      notes: ["2"],
+    },
+    {
+      name: "Chiori Hori",
+      url: "https://www.merl.com/people/chori",
+      institution: "MERL",
+      notes: ["2"],
+    },
+    {
+      name: "Gedas Bertasius",
+      url: "https://www.gedasbertasius.com/",
+      institution: "UNC Chapel Hill",
+      notes: ["1"],
+    },
+    {
+      name: "Daniel Szafir",
+      url: "https://cs.unc.edu/person/daniel-szafir/",
+      institution: "UNC Chapel Hill",
+      notes: ["1"],
+    },
+    {
+      name: "Siddarth Jain",
+      url: "https://www.merl.com/people/sjain",
+      institution: "MERL",
+      notes: ["2"],
+    },
   ]}
   notes={[
     {
@@ -49,7 +75,9 @@ import realResults from "./assets/real-results.png";
   ]}
 />
 
-<VideoPlaceholder label="Overview video" file="public/videos/overview.mp4 — or swap for <YouTubeVideo videoId='…' />" />
+{/* TODO: this is the CoRL supplementary cut — its title card still reads
+    "Anonymous submission - CoRL 2026". Replace with a public version. */}
+<Video src={`${import.meta.env.BASE_URL}/videos/overview.mp4`} muted={false} autoplay={false} playsinline={false} />
 
 <HighlightedSection>
 
@@ -228,7 +256,7 @@ The largest relative gain on both platforms comes on RealDistractor, where the d
 
 ## Rollouts
 
-Each tab pairs the vanilla baseline against EGR under one corruption condition, with the clean rollout alongside for reference.
+Each tab holds one corruption condition. Within it, each row is a policy and each column is a sensor condition, so the clean rollout sits beside the corrupted one for the same policy. Clips are taken from the supplementary video.
 
 <Tabs defaultValue="bimanual-nouseless">
   <TabsList>
@@ -240,83 +268,63 @@ Each tab pairs the vanilla baseline against EGR under one corruption condition, 
   </TabsList>
 
   <TabsContent value="bimanual-nouseless">
-    <p class="text-center text-base text-muted-foreground">Corruption: center-erasing the left wrist camera, which carries no task-relevant signal.</p>
-    <TwoColumns>
-      <div slot="left">
-        **Baseline**
-        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
-        <VideoPlaceholder label="Baseline · Corrupted" file="drumstick_bl_c_left.mp4" />
-      </div>
-      <div slot="right">
-        **EGR (ours)**
-        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
-        <VideoPlaceholder label="EGR · Corrupted" file="drumstick_ours_c_left.mp4" />
-      </div>
-    </TwoColumns>
+    <VideoGrid
+      condition="NoUseless — left wrist erased"
+      note="The left wrist camera carries no task-relevant signal here, so erasing it should change nothing. The baseline stalls anyway; EGR completes the task."
+      speed="8× speed"
+      baselineFull="bimanual-baseline-full.mp4"
+      baselineCorrupted="bimanual-baseline-nouseless.mp4"
+      egrFull="bimanual-egr-full.mp4"
+      egrCorrupted="bimanual-egr-nouseless.mp4"
+    />
   </TabsContent>
 
   <TabsContent value="bimanual-usefulonly">
-    <p class="text-center text-base text-muted-foreground">Corruption: center-erasing the front camera, leaving only the useful wrist view.</p>
-    <TwoColumns>
-      <div slot="left">
-        **Baseline**
-        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
-        <VideoPlaceholder label="Baseline · Corrupted" file="drumstick_bl_c_front.mp4" />
-      </div>
-      <div slot="right">
-        **EGR (ours)**
-        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
-        <VideoPlaceholder label="EGR · Corrupted" file="drumstick_ours_c_front.mp4" />
-      </div>
-    </TwoColumns>
+    <VideoGrid
+      condition="UsefulOnly — front camera erased"
+      note="Erasing the front view leaves only the useful wrist camera. The baseline cannot act on it alone; EGR falls back on it."
+      speed="8× speed"
+      baselineFull="bimanual-baseline-full.mp4"
+      baselineCorrupted="bimanual-baseline-usefulonly.mp4"
+      egrFull="bimanual-egr-full.mp4"
+      egrCorrupted="bimanual-egr-usefulonly.mp4"
+    />
   </TabsContent>
 
   <TabsContent value="bimanual-distractor">
-    <p class="text-center text-base text-muted-foreground">Corruption: unseen physical objects placed in the wrist camera's view.</p>
-    <TwoColumns>
-      <div slot="left">
-        **Baseline**
-        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
-        <VideoPlaceholder label="Baseline · Distractors" file="drumstick_bl_c_real.mp4" />
-      </div>
-      <div slot="right">
-        **EGR (ours)**
-        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
-        <VideoPlaceholder label="EGR · Distractors" file="drumstick_ours_c_real.mp4" />
-      </div>
-    </TwoColumns>
+    <VideoGrid
+      condition="RealDistractor — unseen objects in view"
+      note="Physical objects the policy has never encountered are placed in the scene — no synthetic corruption at all. Success goes from 30% to 85%."
+      speed="8× speed"
+      baselineFull="bimanual-baseline-full.mp4"
+      baselineCorrupted="bimanual-baseline-distractor.mp4"
+      egrFull="bimanual-egr-full.mp4"
+      egrCorrupted="bimanual-egr-distractor.mp4"
+    />
   </TabsContent>
 
   <TabsContent value="tactile-single">
-    <p class="text-center text-base text-muted-foreground">Corruption: vision and the left GelSight erased, leaving only the useful right GelSight.</p>
-    <TwoColumns>
-      <div slot="left">
-        **Baseline**
-        <VideoPlaceholder label="Baseline · Full" file="pencil_bl_clean.mp4" />
-        <VideoPlaceholder label="Baseline · Corrupted" file="pencil_bl_c_both.mp4" />
-      </div>
-      <div slot="right">
-        **EGR (ours)**
-        <VideoPlaceholder label="EGR · Full" file="pencil_ours_clean.mp4" />
-        <VideoPlaceholder label="EGR · Corrupted" file="pencil_ours_c_both.mp4" />
-      </div>
-    </TwoColumns>
+    <VideoGrid
+      condition="SingleUseful — vision and left GelSight erased"
+      note="Only the right GelSight survives. The baseline stops early; EGR keeps localizing the tactile feature for the full episode."
+      speed="4× speed"
+      baselineFull="tactile-baseline-full.mp4"
+      baselineCorrupted="tactile-baseline-single.mp4"
+      egrFull="tactile-egr-full.mp4"
+      egrCorrupted="tactile-egr-single.mp4"
+    />
   </TabsContent>
 
   <TabsContent value="tactile-distractor">
-    <p class="text-center text-base text-muted-foreground">Corruption: unseen physical objects placed in the camera's view.</p>
-    <TwoColumns>
-      <div slot="left">
-        **Baseline**
-        <VideoPlaceholder label="Baseline · Full" file="pencil_bl_clean.mp4" />
-        <VideoPlaceholder label="Baseline · Distractors" file="pencil_bl_real.mp4" />
-      </div>
-      <div slot="right">
-        **EGR (ours)**
-        <VideoPlaceholder label="EGR · Full" file="pencil_ours_clean.mp4" />
-        <VideoPlaceholder label="EGR · Distractors" file="pencil_ours_c_real.mp4" />
-      </div>
-    </TwoColumns>
+    <VideoGrid
+      condition="RealDistractor — unseen objects in view"
+      note="The same physical-distractor probe on the vision-tactile platform, where the informative sensor is not a camera at all."
+      speed="4× speed"
+      baselineFull="tactile-baseline-full.mp4"
+      baselineCorrupted="tactile-baseline-distractor.mp4"
+      egrFull="tactile-egr-full.mp4"
+      egrCorrupted="tactile-egr-distractor.mp4"
+    />
   </TabsContent>
 </Tabs>
 
