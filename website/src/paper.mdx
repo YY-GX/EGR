@@ -2,10 +2,21 @@
 title: "EGR: Evidence-Gated Regularization for Robust VLA Policies"
 theme: light
 favicon: favicon.svg
-description: "Sensing Which Modality Matters: Evidence-Gated Regularization for Robust VLA Policies"
+description: "A modality-agnostic training objective that teaches VLA policies which sensor to trust at each frame, with zero inference-time overhead."
 ---
 
 import Header from "./components/Header.astro";
+import HighlightedSection from "./components/HighlightedSection.astro";
+import Figure from "./components/Figure.astro";
+import Picture from "./components/Picture.astro";
+import TwoColumns from "./components/TwoColumns.astro";
+import VideoPlaceholder from "./components/VideoPlaceholder.astro";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/starwind/tabs";
+
+import teaser from "./assets/teaser.png";
+import method from "./assets/method.png";
+import hardwareTasks from "./assets/hardware-tasks.png";
+import realResults from "./assets/real-results.png";
 
 <Header
   title="Sensing Which Modality Matters: Evidence-Gated Regularization for Robust VLA Policies"
@@ -30,4 +41,304 @@ import Header from "./components/Header.astro";
     { symbol: "2", text: "Mitsubishi Electric Research Laboratories (MERL)" },
     { symbol: "†", text: "Corresponding author: yygx@cs.unc.edu" },
   ]}
+  links={[
+    { name: "Paper", url: "pdfs/egr-paper.pdf", icon: "ri:file-pdf-2-line" },
+    { name: "Appendix", url: "pdfs/egr-appendix.pdf", icon: "ri:file-list-2-line" },
+    { name: "arXiv", url: "#", icon: "academicons:arxiv" },
+    { name: "Code", url: "https://github.com/YY-GX/EGR", icon: "ri:github-line" },
+  ]}
 />
+
+<VideoPlaceholder label="Overview video" file="public/videos/overview.mp4 — or swap for <YouTubeVideo videoId='…' />" />
+
+<HighlightedSection>
+
+## Abstract
+
+Vision-Language-Action (VLA) policies fuse multimodal sensory inputs, but training on limited and homogeneous robot demonstrations encourages spurious inter-sensor correlations rather than task-relevant signal, a failure we term **modality entanglement**. Under real-world occlusions and distractors, this manifests as *nuisance sensitivity* to corruption of uninformative sensors and *single-modality insufficiency* when only one informative sensor remains intact.
+
+We propose **Evidence-Gated Regularization (EGR)**, a modality-agnostic training objective that introduces zero inference-time overhead. EGR derives a per-frame and per-sensor task-relevance signal to gate two state-conditional consistency objectives: invariance on low-evidence sensors, and single-sensor sufficiency on high-evidence ones. We introduce a benchmark based on BEHAVIOR-1K, comprising a fast inference-only diagnostic suite and 47 rollout-based skills targeting modality entanglement. We validate EGR on this benchmark and on two real-robot setups with fundamentally different embodiments: a bi-manual setup with two Kinova arms and three RGB cameras, and a single-arm MELFA ASSISTA setup combining vision and GelSight tactile sensors. EGR improves simulation success rates (SR) from **12.5% to 16.4%** under full modalities (+31%), from **9.4% to 16.5%** under uninformative-sensor corruption (+75%), and from **2.8% to 6.1%** under single-sensor fallback (+120%). Under physical-object distractors, EGR boosts SR from **30% to 85%** on the bi-manual setup (+183%) and from **55% to 70%** on the tactile setup (+27%).
+
+</HighlightedSection>
+
+## Modality entanglement
+
+VLA policies build on large-model backbones that fuse vision, language, and proprioception early. Early fusion is known to invite shortcut learning, and robot demonstrations — small, and narrow in operator, environment, and object diversity — make it worse. The result is a policy whose behavioral dependence on a sensor is misaligned with how much that sensor actually matters at the current state.
+
+<Figure>
+  <Picture slot="figure" src={teaser} alt="Two failure modes of modality entanglement: distractors in a task-irrelevant wrist camera break navigation, and an occluded head camera stops the policy despite an intact wrist view." />
+  <span slot="caption">Two failure modes of modality entanglement. **(a-b) Nuisance sensitivity:** distractors in a task-irrelevant wrist camera break navigation despite an unchanged head camera. **(c-d) Single-modality insufficiency:** when a deeper-placed target makes the shelf board occlude the head camera, the policy stops despite an intact wrist view.</span>
+</Figure>
+
+<TwoColumns>
+<div slot="left">
+
+### I. Nuisance sensitivity
+
+During navigation only the head camera carries task-relevant signal; the two downward-facing wrist cameras see floor. Adding physical distractors to the **wrist views alone** stalls the policy, even though the head view is unchanged. The policy has bound the floor's specific appearance to "being on the right path."
+
+*The policy over-trusts an irrelevant view.*
+
+</div>
+<div slot="right">
+
+### II. Single-modality insufficiency
+
+Reaching into a shelf, both the head and the right wrist camera see the target. Place the target deeper and the shelf board occludes the head view while the wrist still sees it clearly — yet the policy stops or behaves erratically. It never learned that the wrist alone is sufficient evidence to continue.
+
+*The policy fails to fall back on the one intact, useful view.*
+
+</div>
+</TwoColumns>
+
+## Evidence-Gated Regularization
+
+EGR separates **how task-relevant each sensor is** at each frame from **how that relevance shapes the policy**. The first part is modality-specific; the second is shared across every sensor type. Nothing changes at inference — EGR is a training objective only.
+
+<Figure>
+  <Picture slot="figure" src={method} alt="EGR gates two consistency objectives on a per-frame, per-sensor evidence score: invariance when a low-evidence sensor is corrupted, and sufficiency when only a high-evidence sensor survives." />
+  <span slot="caption">EGR gates two state-conditional consistency objectives on the per-frame evidence score. **Left:** corrupting a low-evidence sensor must not move the action distribution. **Right:** keeping only a high-evidence sensor must not move it either.</span>
+</Figure>
+
+### The evidence score
+
+For each frame $t$ and sensor $m \in \mathcal{M}$ we assign an evidence score $E_{t,m} \in [0,1]$, normalized across modalities so it captures *relative* importance. It is derived from task structure rather than learned end-to-end from the very demonstrations that caused the problem.
+
+- **Vision.** Evidence is the amount of task-relevant geometry in view. With per-frame instance segmentation and task annotations of *focal* objects (what is manipulated) and *interaction* objects (the target or receptacle), the per-camera score is $s_{t,m} = a^{\mathrm{focal}}_{t,m} + \alpha \cdot g_{t,m} \cdot a^{\mathrm{inter}}_{t,m}$, where the gate $g_{t,m}$ admits interaction objects only when the focal object is visible in the same camera — otherwise a large table would inflate cameras that never see the focal object. Cross-camera normalization gives $E_{t,m}$, and a global gate $G_t$ disables both losses on search frames where no camera carries meaningful evidence.
+- **Tactile.** In the sparse-contact regime (grasping, pressing, insertion) contact *is* the task-relevant event, so $E_{t,\mathrm{tactile}}$ is a binary contact indicator. In the rich-contact regime, where contact persists throughout, a task-feature operator $\phi_{\mathrm{task}}$ scores the current tactile reading against reference signatures from demonstrations.
+
+### Two gated objectives
+
+The score selects which failure mode each frame is susceptible to, and therefore which consistency to enforce:
+
+$$
+\mathcal{L}_{\mathrm{inv}} = \sum_{t,\,m \in \mathcal{M}} G_t \cdot w_{\mathrm{inv}}(E_{t,m}) \cdot \big\| v_\theta(o_t) - v_\theta(\tilde{o}^{(m)}_t) \big\|_2^2
+$$
+
+$$
+\mathcal{L}_{\mathrm{suff}} = \sum_{t,\,m \in \mathcal{M}} G_t \cdot w_{\mathrm{suff}}(E_{t,m}) \cdot \big\| v_\theta(o_t) - v_\theta(o^m_t) \big\|_2^2
+$$
+
+$\mathcal{L}_{\mathrm{inv}}$ fires on **low-evidence** sensors: corrupting what does not matter must not change the action. $\mathcal{L}_{\mathrm{suff}}$ fires on **high-evidence** sensors: that sensor alone must be enough to act. Both ride on top of the base flow-matching imitation loss,
+
+$$
+\mathcal{L} = \mathcal{L}_{\mathrm{flow}} + \lambda_{\mathrm{inv}}\mathcal{L}_{\mathrm{inv}} + \lambda_{\mathrm{suff}}\mathcal{L}_{\mathrm{suff}}.
+$$
+
+Because the weights are hinges rather than hard constraints, evidence acts as a soft inductive bias — the policy stays free to find extra structure in any sensor. An importance-sampled estimator collapses the $2|\mathcal{M}|$ corrupted forward passes to two per step, independent of sensor count.
+
+## Benchmark
+
+We build a benchmark on **BEHAVIOR-1K** targeting modality entanglement directly, with **47 curated skill segments** (11 navigation, 36 manipulation) filtered from 118 candidates by three vision-evidence criteria, plus per-segment initial simulator states recovered by demonstration replay.
+
+<TwoColumns>
+<div slot="left">
+
+### Two suites
+
+- **Suite 1 — inference only.** Per-frame action deviation $\Delta$ under modality perturbation. No rollouts, so it is cheap to run.
+- **Suite 2 — rollouts.** Task success rate (SR), plus end-effector contact rate (EC) and minimum distance to target (Dist) for manipulation. 20 rollouts per segment.
+
+</div>
+<div slot="right">
+
+### Four corruption regimes
+
+- **Clean** — every sensor intact.
+- **NoUseless** — corrupt the useless sensor. Probes nuisance sensitivity.
+- **UsefulOnly** — corrupt all but the one useful sensor. Probes single-modality insufficiency.
+- **SingleUseful** — for setups with exactly one useful sensor; both modes at once.
+
+</div>
+</TwoColumns>
+
+## Results in simulation
+
+Both suites agree. Vanilla $\pi_{0.5}$ shows the entanglement, and EGR reduces it without giving up clean-input performance — manipulation success under full modalities actually goes *up*, suggesting evidence gating also helps the policy learn more task-relevant features in the first place.
+
+### Suite 2 — task success
+
+| Method | NAV Full | NAV SingleUseful | MAN Full | MAN NoUseless | MAN UsefulOnly |
+| --- | --- | --- | --- | --- | --- |
+| vanilla $\pi_{0.5}$ | **42.3** | 15.5 | 12.5 / **52.8** / **0.25** | 9.4 / 47.2 / 0.26 | 2.8 / 22.8 / 0.45 |
+| ModDrop | 40.0 | 15.5 | 7.5 / 41.0 / 0.29 | 6.8 / 38.9 / 0.29 | 2.8 / 22.4 / 0.47 |
+| **EGR (ours)** | 40.9 | **37.3** | **16.4** / 50.0 / 0.26 | **16.5** / **53.9** / **0.25** | **6.1** / **30.1** / **0.37** |
+
+<span class="block text-center text-base text-muted-foreground">NAV ($n=11$) reports SR. MAN ($n=36$) reports SR&nbsp;↑ / EC&nbsp;↑ / Dist&nbsp;↓. Best per metric per regime in bold.</span>
+
+The headline row: manipulation SR rises **12.5 → 16.4** under full modalities (+31%), **9.4 → 16.5** under NoUseless (+75%), and **2.8 → 6.1** under UsefulOnly (+120%). On navigation, clean performance is essentially preserved (42.3 → 40.9) while SingleUseful more than doubles, **15.5 → 37.3** (+141%).
+
+### Suite 1 — action deviation
+
+| Method | NAV Full | SingleUseful | Ratio | MAN Full | NoUseless | Ratio | UsefulOnly | Ratio |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| vanilla $\pi_{0.5}$ | 0.0616 | 0.0809 | +31.4% | 0.0020 | 0.0022 | +12.7% | 0.0052 | +158.5% |
+| ModDrop | 0.0853 | 0.1172 | +37.4% | 0.0024 | 0.0026 | +10.9% | 0.0056 | +137.7% |
+| **EGR (ours)** | 0.0780 | 0.0903 | **+15.8%** | 0.0023 | 0.0024 | **+5.1%** | 0.0051 | **+121.8%** |
+
+<span class="block text-center text-base text-muted-foreground">Ratio is the percentage increase in action deviation relative to Full; lower is better.</span>
+
+The vanilla rows are the diagnosis: perturbing sensors the filter labeled *useless* still moves the action distribution by +31.4% (NAV) and +12.7% (MAN), and dropping to the single useful sensor moves it by +158.5%. ModDrop shows the same pattern at higher absolute deviation — random modality dropout does not remove the entanglement. EGR lowers every ratio.
+
+## Real-robot validation
+
+We test two platforms with deliberately different embodiments and sensor sets, plus a **RealDistractor** condition in which a physical out-of-distribution object enters the camera's view — the only non-synthetic corruption in the evaluation.
+
+<Figure>
+  <Picture slot="figure" src={hardwareTasks} alt="Real-robot platforms and tasks: a vision-tactile MELFA ASSISTA arm and a bi-manual two-Kinova setup." />
+  <span slot="caption">Real-robot platforms and tasks. **(a, b)** Vision-tactile platform: one MELFA ASSISTA arm, one RGB camera, two GelSight sensors. **(c-f)** Bi-manual platform: two Kinova arms, three RGB cameras. Sensor zoom-ins in (a) and (c).</span>
+</Figure>
+
+<Figure>
+  <Picture slot="figure" src={realResults} alt="Bar chart of real-robot success rates across corruption conditions, baseline versus EGR." />
+  <span slot="caption">Real-robot results across both platforms, 10 trials per condition. Each pair compares the vanilla baseline (left, gray) against EGR (right, teal); relative gain is printed above each pair.</span>
+</Figure>
+
+<TwoColumns>
+<div slot="left">
+
+### Bi-manual vision platform
+
+4 tasks × 4 conditions × 10 trials.
+
+| Condition | Baseline | EGR | Gain |
+| --- | --- | --- | --- |
+| Clean | 70% | **80%** | +14% |
+| NoUseless | 52.5% | **90%** | +71% |
+| UsefulOnly | 25% | **72.5%** | +190% |
+| RealDistractor | 30% | **85%** | +183% |
+
+</div>
+<div slot="right">
+
+### Vision-tactile platform
+
+2 tasks × 3 conditions × 10 trials.
+
+| Condition | Baseline | EGR | Gain |
+| --- | --- | --- | --- |
+| Clean | 90% | 85% | −6% |
+| SingleUseful | 40% | **90%** | +125% |
+| RealDistractor | 55% | **70%** | +27% |
+
+</div>
+</TwoColumns>
+
+The largest relative gain on both platforms comes on RealDistractor, where the distractor is a physical object the policy has never seen — the strongest out-of-distribution signal available to us. The tactile platform confirms that the gains carry to a sensor combination the vision instantiation never touches.
+
+## Rollouts
+
+Each tab pairs the vanilla baseline against EGR under one corruption condition, with the clean rollout alongside for reference.
+
+<Tabs defaultValue="bimanual-nouseless">
+  <TabsList>
+    <TabsTrigger value="bimanual-nouseless">Bi-manual · NoUseless</TabsTrigger>
+    <TabsTrigger value="bimanual-usefulonly">Bi-manual · UsefulOnly</TabsTrigger>
+    <TabsTrigger value="bimanual-distractor">Bi-manual · RealDistractor</TabsTrigger>
+    <TabsTrigger value="tactile-single">Tactile · SingleUseful</TabsTrigger>
+    <TabsTrigger value="tactile-distractor">Tactile · RealDistractor</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="bimanual-nouseless">
+    <p class="text-center text-base text-muted-foreground">Corruption: center-erasing the left wrist camera, which carries no task-relevant signal.</p>
+    <TwoColumns>
+      <div slot="left">
+        **Baseline**
+        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
+        <VideoPlaceholder label="Baseline · Corrupted" file="drumstick_bl_c_left.mp4" />
+      </div>
+      <div slot="right">
+        **EGR (ours)**
+        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
+        <VideoPlaceholder label="EGR · Corrupted" file="drumstick_ours_c_left.mp4" />
+      </div>
+    </TwoColumns>
+  </TabsContent>
+
+  <TabsContent value="bimanual-usefulonly">
+    <p class="text-center text-base text-muted-foreground">Corruption: center-erasing the front camera, leaving only the useful wrist view.</p>
+    <TwoColumns>
+      <div slot="left">
+        **Baseline**
+        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
+        <VideoPlaceholder label="Baseline · Corrupted" file="drumstick_bl_c_front.mp4" />
+      </div>
+      <div slot="right">
+        **EGR (ours)**
+        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
+        <VideoPlaceholder label="EGR · Corrupted" file="drumstick_ours_c_front.mp4" />
+      </div>
+    </TwoColumns>
+  </TabsContent>
+
+  <TabsContent value="bimanual-distractor">
+    <p class="text-center text-base text-muted-foreground">Corruption: unseen physical objects placed in the wrist camera's view.</p>
+    <TwoColumns>
+      <div slot="left">
+        **Baseline**
+        <VideoPlaceholder label="Baseline · Full" file="drumstick_bl_clean.mp4" />
+        <VideoPlaceholder label="Baseline · Distractors" file="drumstick_bl_c_real.mp4" />
+      </div>
+      <div slot="right">
+        **EGR (ours)**
+        <VideoPlaceholder label="EGR · Full" file="drumstick_ours_clean.mp4" />
+        <VideoPlaceholder label="EGR · Distractors" file="drumstick_ours_c_real.mp4" />
+      </div>
+    </TwoColumns>
+  </TabsContent>
+
+  <TabsContent value="tactile-single">
+    <p class="text-center text-base text-muted-foreground">Corruption: vision and the left GelSight erased, leaving only the useful right GelSight.</p>
+    <TwoColumns>
+      <div slot="left">
+        **Baseline**
+        <VideoPlaceholder label="Baseline · Full" file="pencil_bl_clean.mp4" />
+        <VideoPlaceholder label="Baseline · Corrupted" file="pencil_bl_c_both.mp4" />
+      </div>
+      <div slot="right">
+        **EGR (ours)**
+        <VideoPlaceholder label="EGR · Full" file="pencil_ours_clean.mp4" />
+        <VideoPlaceholder label="EGR · Corrupted" file="pencil_ours_c_both.mp4" />
+      </div>
+    </TwoColumns>
+  </TabsContent>
+
+  <TabsContent value="tactile-distractor">
+    <p class="text-center text-base text-muted-foreground">Corruption: unseen physical objects placed in the camera's view.</p>
+    <TwoColumns>
+      <div slot="left">
+        **Baseline**
+        <VideoPlaceholder label="Baseline · Full" file="pencil_bl_clean.mp4" />
+        <VideoPlaceholder label="Baseline · Distractors" file="pencil_bl_real.mp4" />
+      </div>
+      <div slot="right">
+        **EGR (ours)**
+        <VideoPlaceholder label="EGR · Full" file="pencil_ours_clean.mp4" />
+        <VideoPlaceholder label="EGR · Distractors" file="pencil_ours_c_real.mp4" />
+      </div>
+    </TwoColumns>
+  </TabsContent>
+</Tabs>
+
+<HighlightedSection>
+
+## Takeaway
+
+- **Problem.** Early fusion causes *modality entanglement*, which shows up as nuisance sensitivity and single-modality insufficiency.
+- **Method.** EGR uses a task-grounded, per-frame evidence score to enforce invariance on the sensors that do not matter and sufficiency on the ones that do.
+- **Benchmark.** A BEHAVIOR-1K suite of 47 skills that evaluates systematic sensor loss, alongside a cheap inference-only diagnostic.
+- **Result.** A modality-agnostic training objective with zero inference cost, delivering large robustness gains in simulation and on two real platforms with different embodiments.
+
+</HighlightedSection>
+
+## BibTeX
+
+```bibtex
+@article{yang2026egr,
+  title   = {Sensing Which Modality Matters: Evidence-Gated Regularization
+             for Robust VLA Policies},
+  author  = {Yang, Yue and Romeres, Diego and Hori, Chiori and
+             Bertasius, Gedas and Szafir, Daniel and Jain, Siddarth},
+  year    = {2026},
+}
+```

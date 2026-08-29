@@ -1,0 +1,19 @@
+---
+// Stand-in for a rollout clip that has not been encoded and committed yet.
+// Drop the file into /public/videos/ and swap this for:
+//   <Video src={`${import.meta.env.BASE_URL}/videos/<file>`} controls={false} />
+interface Props {
+  label: string;
+  file?: string;
+}
+
+const { label, file } = Astro.props;
+---
+
+<div
+  class="not-prose border-outline/60 bg-muted text-muted-foreground flex aspect-video w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 text-center"
+>
+  <span class="text-base font-medium">{label}</span>
+  {file && <code class="text-xs opacity-70">{file}</code>}
+  <span class="text-xs tracking-wide uppercase opacity-60">video pending</span>
+</div>
