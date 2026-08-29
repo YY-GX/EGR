@@ -18,6 +18,8 @@ interface Props {
   platform: string;
   sensors: string;
   speed: string;
+  about?: string;
+  criterion?: string;
   referenceBaseline: string;
   referenceEgr: string;
   conditions: Condition[];
@@ -27,6 +29,8 @@ const {
   platform,
   sensors,
   speed,
+  about,
+  criterion,
   referenceBaseline,
   referenceEgr,
   conditions,
@@ -50,6 +54,20 @@ const poster = (name: string) =>
       >
     </p>
   </header>
+
+  {
+    (about || criterion) && (
+      <div class="border-border bg-muted/40 mb-4 rounded-xl border px-4 py-3 text-sm leading-relaxed">
+        {about && <p class="text-foreground m-0" set:html={about} />}
+        {criterion && (
+          <p class="text-muted-foreground m-0 mt-2">
+            <span class="text-foreground font-medium">Success criterion. </span>
+            <span set:html={criterion} />
+          </p>
+        )}
+      </div>
+    )
+  }
 
   <div class="border-border bg-muted/50 mb-4 rounded-xl border p-3 sm:p-4">
     <p

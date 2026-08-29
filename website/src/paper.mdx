@@ -370,6 +370,8 @@ Two Kinova arms and three RGB cameras, on four tasks: stack bowls, put drumstick
   platform="Bi-manual rollouts"
   sensors="put drumstick on plate · front camera + two wrist cameras"
   speed="4× speed"
+  about="The arm picks the drumstick off the table and places it on the plate. The three views feeding the policy are a front third-person camera and one camera on each wrist."
+  criterion="The drumstick ends up on the plate within the episode."
   referenceBaseline="bimanual-baseline-full.mp4"
   referenceEgr="bimanual-egr-full.mp4"
   conditions={[
@@ -417,8 +419,10 @@ One MELFA ASSISTA arm, one RGB camera, and two GelSight sensors, on two tasks: r
 
 <RolloutSection
   platform="Vision-tactile rollouts"
-  sensors="pencil serial code · GelSight view"
+  sensors="pencil serial code · right GelSight view"
   speed="2× speed"
+  about="An industrial-inspection task: the arm must find and then <em>hold</em> a specific engraved feature — here the serial code <strong>&ldquo;6014&rdquo;</strong> on a pencil — inside the contact patch of the right GelSight. What you are watching is that GelSight&rsquo;s output, so it is a contact map rather than a photograph: the target reads as a faint vertical band of raised characters near the centre. Vision is of little use once the pencil is in the gripper, which is what makes this the platform&rsquo;s single useful sensor."
+  criterion="The target feature stays inside the contact patch for more than 20&nbsp;s of the 30&nbsp;s episode. Under SingleUseful below, the baseline loses the feature after 16&nbsp;s and fails, while EGR holds it for the full episode."
   referenceBaseline="tactile-baseline-full.mp4"
   referenceEgr="tactile-egr-full.mp4"
   conditions={[
