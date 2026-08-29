@@ -1,45 +1,30 @@
 ---
-// Visible section index for the top of the page. The sticky PageNav covers
-// navigation once you are scrolling; this covers the first ten seconds.
+// One quiet line of section links under the header. The sticky PageNav takes
+// over once the reader starts scrolling; this only has to answer "what's on
+// this page" without competing with the title.
 interface Props {
-  items: { id: string; label: string; hint: string }[];
+  items: { id: string; label: string }[];
 }
 
 const { items } = Astro.props;
 ---
 
-<nav aria-label="Contents" class="not-prose my-12">
-  <div class="mx-auto max-w-[64rem]">
-    <p
-      class="text-muted-foreground mb-4 text-center text-xs tracking-[0.16em] uppercase"
-    >
-      Contents
-    </p>
-    <ol
-      class="border-border m-0 grid list-none grid-cols-1 gap-px overflow-hidden rounded-xl border bg-border p-0 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      {
-        items.map((item, i) => (
-          <li class="m-0 p-0">
-            <a
-              href={`#${item.id}`}
-              class="group bg-background hover:bg-muted flex h-full items-baseline gap-3 px-5 py-4 no-underline transition-colors"
-            >
-              <span class="text-primary/70 group-hover:text-primary text-sm tabular-nums transition-colors">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span class="min-w-0">
-                <span class="text-foreground group-hover:text-primary block leading-snug font-medium transition-colors">
-                  {item.label}
-                </span>
-                <span class="text-muted-foreground block text-sm leading-snug">
-                  {item.hint}
-                </span>
-              </span>
-            </a>
-          </li>
-        ))
-      }
-    </ol>
-  </div>
+<nav aria-label="Contents" class="not-prose mt-8 mb-2">
+  <ul
+    class="text-muted-foreground m-0 flex list-none flex-wrap items-center justify-center gap-x-1 gap-y-2 p-0 text-sm"
+  >
+    {
+      items.map((item, i) => (
+        <li class="m-0 flex items-center p-0">
+          {i > 0 && <span class="text-outline/60 px-1">·</span>}
+          <a
+            href={`#${item.id}`}
+            class="hover:text-primary rounded px-1.5 py-0.5 no-underline transition-colors"
+          >
+            {item.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
 </nav>

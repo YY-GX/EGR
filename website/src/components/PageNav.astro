@@ -26,7 +26,7 @@ const href = (url: string) =>
       >{short}</a
     >
     <ul
-      class="m-0 flex flex-1 list-none gap-1 overflow-x-auto p-0 text-sm whitespace-nowrap"
+      class="no-scrollbar m-0 flex flex-1 list-none gap-1 overflow-x-auto p-0 text-sm whitespace-nowrap"
     >
       {
         items.map((item) => (
@@ -77,22 +77,44 @@ const href = (url: string) =>
     .filter((el): el is HTMLElement => el !== null);
 
   if (sections.length) {
+    let active = "";
     const setActive = (id: string) => {
+      if (id === active) return;
+      active = id;
       links.forEach((link) => {
         if (link.dataset.navLink === id) link.setAttribute("data-active", "");
         else link.removeAttribute("data-active");
       });
     };
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (visible) setActive(visible.target.id);
-      },
-      { rootMargin: "-20% 0px -70% 0px" },
-    );
-    sections.forEach((section) => observer.observe(section));
+    // Whichever heading was most recently scrolled past the top of the viewport.
+    const update = () => {
+      const line = 96;
+      let current = "";
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= line) current = section.id;
+        else break;
+      }
+      // The last heading sits close to the page end, so it never clears the
+      // threshold; light it once the reader has hit the bottom.
+      if (window.scrollY + window.innerHeight >= document.body.scrollHeight - 4) {
+        current = sections[sections.length - 1].id;
+      }
+      setActive(current);
+    };
+
+    let queued = false;
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        update();
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
   }
 </script>

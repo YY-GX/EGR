@@ -79,8 +79,29 @@ import hardwareBimanual from "./assets/hardware-bimanual.png";
   ]}
 />
 
+<Contents
+  items={[
+    { id: "modality-entanglement", label: "Problem" },
+    { id: "evidence-gated-regularization", label: "Method" },
+    { id: "benchmark", label: "Benchmark" },
+    { id: "results-in-simulation", label: "Simulation" },
+    { id: "real-robot-validation", label: "Real robots" },
+    { id: "limitations", label: "Limitations" },
+    { id: "bibtex", label: "Cite" },
+  ]}
+/>
+
+<HighlightedSection>
+
+## Abstract
+
+Vision-Language-Action (VLA) policies fuse multimodal sensory inputs, but training on limited and homogeneous robot demonstrations encourages spurious inter-sensor correlations rather than task-relevant signal, a failure we term **modality entanglement**. Under real-world occlusions and distractors, this manifests as *nuisance sensitivity* to corruption of uninformative sensors and *single-modality insufficiency* when only one informative sensor remains intact.
+
+We propose **Evidence-Gated Regularization (EGR)**, a modality-agnostic training objective that introduces zero inference-time overhead. EGR derives a per-frame and per-sensor task-relevance signal to gate two state-conditional consistency objectives: invariance on low-evidence sensors, and single-sensor sufficiency on high-evidence ones. We introduce a benchmark based on BEHAVIOR-1K, comprising a fast inference-only diagnostic suite and 47 rollout-based skills targeting modality entanglement. We validate EGR on this benchmark and on two real-robot setups with fundamentally different embodiments: a bi-manual setup with two Kinova arms and three RGB cameras, and a single-arm MELFA ASSISTA setup combining vision and GelSight tactile sensors. EGR improves simulation success rates (SR) from **12.5% to 16.4%** under full modalities (+31%), from **9.4% to 16.5%** under uninformative-sensor corruption (+75%), and from **2.8% to 6.1%** under single-sensor fallback (+120%). Under physical-object distractors, EGR boosts SR from **30% to 85%** on the bi-manual setup (+183%) and from **55% to 70%** on the tactile setup (+27%).
+
+</HighlightedSection>
+
 <KeyNumbers
-  lead="VLA policies over-trust sensors that carry no task-relevant signal, and fail to fall back on the one sensor that does. EGR corrects both with a training-time loss and no inference-time cost."
   stats={[
     { value: "30 → 85%", label: "under unseen physical distractors", sub: "bi-manual real robot, +183%" },
     { value: "2.8 → 6.1%", label: "when only one useful sensor survives", sub: "simulated manipulation, +120%" },
@@ -88,19 +109,6 @@ import hardwareBimanual from "./assets/hardware-bimanual.png";
     { value: "47", label: "benchmark skills for modality entanglement", sub: "BEHAVIOR-1K · 11 NAV + 36 MAN" },
   ]}
 />
-
-<Contents
-  items={[
-    { id: "modality-entanglement", label: "The problem", hint: "Two failure modes of modality entanglement" },
-    { id: "evidence-gated-regularization", label: "The method", hint: "Evidence scores gating two consistency losses" },
-    { id: "benchmark", label: "The benchmark", hint: "47 BEHAVIOR-1K skills, two suites, four regimes" },
-    { id: "results-in-simulation", label: "Simulation results", hint: "Success rates and action deviation" },
-    { id: "real-robot-validation", label: "Real robots", hint: "Two platforms, with rollout videos" },
-    { id: "limitations", label: "Limitations", hint: "What EGR does not cover" },
-  ]}
-/>
-
-<HighlightedSection>
 
 <Video
   src={`${import.meta.env.BASE_URL}/videos/overview.mp4`}
@@ -111,15 +119,7 @@ import hardwareBimanual from "./assets/hardware-bimanual.png";
   preload="none"
 />
 
-<p class="not-prose text-muted-foreground mt-3 mb-10 text-center text-sm">Three-minute overview — sound on</p>
-
-## Abstract
-
-Vision-Language-Action (VLA) policies fuse multimodal sensory inputs, but training on limited and homogeneous robot demonstrations encourages spurious inter-sensor correlations rather than task-relevant signal, a failure we term **modality entanglement**. Under real-world occlusions and distractors, this manifests as *nuisance sensitivity* to corruption of uninformative sensors and *single-modality insufficiency* when only one informative sensor remains intact.
-
-We propose **Evidence-Gated Regularization (EGR)**, a modality-agnostic training objective that introduces zero inference-time overhead. EGR derives a per-frame and per-sensor task-relevance signal to gate two state-conditional consistency objectives: invariance on low-evidence sensors, and single-sensor sufficiency on high-evidence ones. We introduce a benchmark based on BEHAVIOR-1K, comprising a fast inference-only diagnostic suite and 47 rollout-based skills targeting modality entanglement. We validate EGR on this benchmark and on two real-robot setups with fundamentally different embodiments: a bi-manual setup with two Kinova arms and three RGB cameras, and a single-arm MELFA ASSISTA setup combining vision and GelSight tactile sensors. EGR improves simulation success rates (SR) from **12.5% to 16.4%** under full modalities (+31%), from **9.4% to 16.5%** under uninformative-sensor corruption (+75%), and from **2.8% to 6.1%** under single-sensor fallback (+120%). Under physical-object distractors, EGR boosts SR from **30% to 85%** on the bi-manual setup (+183%) and from **55% to 70%** on the tactile setup (+27%).
-
-</HighlightedSection>
+<p class="not-prose text-muted-foreground mt-3 mb-4 text-center text-sm">Three-minute overview — sound on</p>
 
 ## Modality entanglement
 
