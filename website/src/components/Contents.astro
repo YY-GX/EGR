@@ -1,0 +1,45 @@
+---
+// Visible section index for the top of the page. The sticky PageNav covers
+// navigation once you are scrolling; this covers the first ten seconds.
+interface Props {
+  items: { id: string; label: string; hint: string }[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="Contents" class="not-prose my-12">
+  <div class="mx-auto max-w-[64rem]">
+    <p
+      class="text-muted-foreground mb-4 text-center text-xs tracking-[0.16em] uppercase"
+    >
+      Contents
+    </p>
+    <ol
+      class="border-border m-0 grid list-none grid-cols-1 gap-px overflow-hidden rounded-xl border bg-border p-0 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        items.map((item, i) => (
+          <li class="m-0 p-0">
+            <a
+              href={`#${item.id}`}
+              class="group bg-background hover:bg-muted flex h-full items-baseline gap-3 px-5 py-4 no-underline transition-colors"
+            >
+              <span class="text-primary/70 group-hover:text-primary text-sm tabular-nums transition-colors">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span class="min-w-0">
+                <span class="text-foreground group-hover:text-primary block leading-snug font-medium transition-colors">
+                  {item.label}
+                </span>
+                <span class="text-muted-foreground block text-sm leading-snug">
+                  {item.hint}
+                </span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</nav>

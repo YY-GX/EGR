@@ -35,7 +35,7 @@ const toneClass = (tone?: Cell["tone"]) =>
 
 <figure class="not-prose full-bleed my-8 px-6">
   <div
-    class="border-border bg-muted/50 mx-auto w-fit max-w-full min-w-[min(100%,44rem)] overflow-x-auto rounded-xl border p-1 [mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)] sm:[mask-image:none]"
+    class="border-border bg-muted/50 mx-auto w-fit max-w-full min-w-[min(100%,44rem)] overflow-x-auto overflow-y-hidden rounded-xl border [mask-image:linear-gradient(to_right,black_calc(100%-2rem),transparent)] sm:[mask-image:none]"
   >
     <table class="w-full border-collapse text-left tabular-nums">
       {
@@ -77,15 +77,15 @@ const toneClass = (tone?: Cell["tone"]) =>
             <tr
               class:list={[
                 "border-border/70 border-b last:border-0",
-                row.highlight && "bg-primary/6",
+                row.highlight && "bg-primary/8",
               ]}
             >
               <th
                 scope="row"
                 class:list={[
-                  "px-4 py-3 text-left font-normal whitespace-nowrap",
+                  "relative px-4 py-3 text-left font-normal whitespace-nowrap",
                   row.highlight
-                    ? "text-primary border-primary border-l-2 font-medium"
+                    ? "text-primary font-medium before:bg-primary before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:content-['']"
                     : "text-foreground",
                 ]}
                 set:html={row.label}

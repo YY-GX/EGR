@@ -9,16 +9,21 @@ thumbnail: videos/overview-poster.jpg
 import Header from "./components/Header.astro";
 import HighlightedSection from "./components/HighlightedSection.astro";
 import Figure from "./components/Figure.astro";
+import FigureStack from "./components/FigureStack.astro";
 import Picture from "./components/Picture.astro";
 import TwoColumns from "./components/TwoColumns.astro";
 import Video from "./components/Video.astro";
 import RolloutSection from "./components/RolloutSection.astro";
 import ResultsTable from "./components/ResultsTable.astro";
 import KeyNumbers from "./components/KeyNumbers.astro";
+import Contents from "./components/Contents.astro";
 
-import teaser from "./assets/teaser.png";
-import method from "./assets/method.png";
-import hardwareTasks from "./assets/hardware-tasks.png";
+import teaserNuisance from "./assets/teaser-nuisance.png";
+import teaserInsufficiency from "./assets/teaser-insufficiency.png";
+import methodInv from "./assets/method-inv.png";
+import methodSuff from "./assets/method-suff.png";
+import hardwareTactile from "./assets/hardware-tactile.png";
+import hardwareBimanual from "./assets/hardware-bimanual.png";
 
 <Header
   title="Sensing Which Modality Matters: Evidence-Gated Regularization for Robust VLA Policies"
@@ -71,7 +76,6 @@ import hardwareTasks from "./assets/hardware-tasks.png";
   ]}
   links={[
     { name: "Paper", url: "pdfs/egr-paper.pdf", icon: "ri:file-pdf-2-line" },
-    { name: "Appendix", url: "pdfs/egr-appendix.pdf", icon: "ri:file-list-2-line" },
     { name: "Code", url: "https://github.com/YY-GX/EGR", icon: "ri:github-line" },
   ]}
 />
@@ -83,6 +87,17 @@ import hardwareTasks from "./assets/hardware-tasks.png";
     { value: "2.8 → 6.1%", label: "when only one useful sensor survives", sub: "simulated manipulation, +120%" },
     { value: "zero", label: "added inference cost", sub: "a training objective only" },
     { value: "47", label: "benchmark skills for modality entanglement", sub: "BEHAVIOR-1K · 11 NAV + 36 MAN" },
+  ]}
+/>
+
+<Contents
+  items={[
+    { id: "modality-entanglement", label: "The problem", hint: "Two failure modes of modality entanglement" },
+    { id: "evidence-gated-regularization", label: "The method", hint: "Evidence scores gating two consistency losses" },
+    { id: "benchmark", label: "The benchmark", hint: "47 BEHAVIOR-1K skills, two suites, four regimes" },
+    { id: "results-in-simulation", label: "Simulation results", hint: "Success rates and action deviation" },
+    { id: "real-robot-validation", label: "Real robots", hint: "Two platforms, with rollout videos" },
+    { id: "limitations", label: "Limitations", hint: "What EGR does not cover" },
   ]}
 />
 
@@ -111,10 +126,11 @@ We propose **Evidence-Gated Regularization (EGR)**, a modality-agnostic training
 
 VLA policies build on large-model backbones that fuse vision, language, and proprioception early. Early fusion is known to invite shortcut learning, and robot demonstrations — small, and narrow in operator, environment, and object diversity — make it worse. The result is a policy whose behavioral dependence on a sensor is misaligned with how much that sensor actually matters at the current state.
 
-<Figure>
-  <Picture slot="figure" src={teaser} alt="Four-panel figure. The top row shows a mobile robot navigating a corridor, first cleanly and then with toys scattered in its wrist-camera view. The bottom row shows the same robot reaching into a shelf, first with the target in plain view and then with the shelf board occluding the head camera." />
+<FigureStack topLabel="I. Nuisance sensitivity" bottomLabel="II. Single-modality insufficiency">
+  <Picture slot="top" src={teaserNuisance} alt="Two panels of a mobile robot navigating a corridor: first cleanly, then with toys scattered into its downward-facing wrist-camera view, where it fails." />
+  <Picture slot="bottom" src={teaserInsufficiency} alt="Two panels of a robot reaching into a shelf: first with the target in plain view of both cameras, then with the shelf board occluding the head camera, where it fails." />
   <span slot="caption">Two failure modes of modality entanglement. **(a-b) Nuisance sensitivity:** distractors in a task-irrelevant wrist camera break navigation despite an unchanged head camera. **(c-d) Single-modality insufficiency:** when a deeper-placed target makes the shelf board occlude the head camera, the policy stops despite an intact wrist view.</span>
-</Figure>
+</FigureStack>
 
 <TwoColumns>
 <div slot="left">
@@ -141,10 +157,11 @@ Reaching into a shelf, both the head and the right wrist camera see the target. 
 
 EGR separates **how task-relevant each sensor is** at each frame from **how that relevance shapes the policy**. The first part is modality-specific; the second is shared across every sensor type. Nothing changes at inference — EGR is a training objective only.
 
-<Figure>
-  <Picture slot="figure" src={method} alt="Two side-by-side training diagrams. In each, a clean three-camera observation and a corrupted copy are passed through the same VLA and their outputs compared. On the left the corrupted sensor is a low-evidence wrist camera; on the right only a high-evidence wrist camera is preserved." />
-  <span slot="caption">EGR gates two state-conditional consistency objectives on the per-frame evidence score. **Left:** corrupting a low-evidence sensor must not move the action distribution. **Right:** keeping only a high-evidence sensor must not move it either.</span>
-</Figure>
+<FigureStack topLabel="Invariance loss — low-evidence sensor corrupted" bottomLabel="Sufficiency loss — only the high-evidence sensor preserved">
+  <Picture slot="top" src={methodInv} alt="A clean three-camera observation and a copy with the left wrist view blacked out are passed through the same VLA; the two action outputs are compared to form the invariance loss." />
+  <Picture slot="bottom" src={methodSuff} alt="A clean three-camera observation and a copy with everything but the right wrist view blacked out are passed through the same VLA; the two action outputs are compared to form the sufficiency loss." />
+  <span slot="caption">EGR gates two state-conditional consistency objectives on the per-frame evidence score. **Top:** corrupting a low-evidence sensor must not move the action distribution. **Bottom:** keeping only a high-evidence sensor must not move it either.</span>
+</FigureStack>
 
 ### The evidence score
 
@@ -326,10 +343,15 @@ Read the Δ columns, not the absolute ones. Each method's deviation is measured 
 
 We test two platforms with deliberately different embodiments and sensor sets, plus a **RealDistractor** condition in which a physical out-of-distribution object enters the camera's view — the only non-synthetic corruption in the evaluation.
 
-<Figure>
-  <Picture slot="figure" src={hardwareTasks} alt="Six labelled photographs of robot workspaces: board crack and pencil serial code on the tactile platform, then close microwave door, put sushi in pot, put drumstick on plate, and stack bowls on the bi-manual platform." />
+<FigureStack
+  topLabel="Vision-tactile platform"
+  bottomLabel="Bi-manual platform"
+  topWidth="50%"
+>
+  <Picture slot="top" src={hardwareTactile} alt="Two photographs of the MELFA ASSISTA workspace: locating a crack in a board, and reading a pencil's serial code, with the GelSight sensors called out." />
+  <Picture slot="bottom" src={hardwareBimanual} alt="Four photographs of the two-Kinova workspace: closing a microwave door, putting sushi in a pot, putting a drumstick on a plate, and stacking bowls." />
   <span slot="caption">Real-robot platforms and tasks. **(a, b)** Vision-tactile platform: one MELFA ASSISTA arm, one RGB camera, two GelSight sensors. **(c-f)** Bi-manual platform: two Kinova arms, three RGB cameras. Sensor zoom-ins in (a) and (c).</span>
-</Figure>
+</FigureStack>
 
 ### Bi-manual vision platform
 
