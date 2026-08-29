@@ -73,6 +73,20 @@ const pdfUrl = new URL(prefix + "pdfs/egr-paper.pdf", Astro.site).href;
     />
     <link rel="apple-touch-icon" href={prefix + "apple-touch-icon.png"} />
 
+    {/* Google Analytics — same property as yy-gx.github.io and LiLo-VLA. */}
+    <script
+      is:inline
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-L4FWDSZJVD"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-L4FWDSZJVD");
+    </script>
+
     <link rel="canonical" href={canonical} />
 
     <meta property="og:title" content={title} />
