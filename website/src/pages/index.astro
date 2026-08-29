@@ -3,6 +3,7 @@ import { Font } from "astro:assets";
 
 import Table from "../components/Table.astro";
 import PageNav from "../components/PageNav.astro";
+import BackToTop from "../components/BackToTop.astro";
 
 import "../styles/global.css";
 import "katex/dist/katex-swap.css";
@@ -147,5 +148,6 @@ const pdfUrl = new URL(prefix + "pdfs/egr-paper.pdf", Astro.site).href;
         >
       </p>
     </footer>
+    <BackToTop />
   </body>
 </html>
