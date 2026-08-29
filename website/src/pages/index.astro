@@ -12,7 +12,6 @@ import { Content, frontmatter } from "../paper.mdx";
 interface Frontmatter {
   title: string;
   description?: string;
-  favicon: string;
   thumbnail?: string;
   theme?: "device" | "light" | "dark";
 }
@@ -20,7 +19,6 @@ interface Frontmatter {
 const {
   title,
   description,
-  favicon,
   thumbnail,
   theme = "device",
 } = frontmatter as Frontmatter;
@@ -65,7 +63,14 @@ const pdfUrl = new URL(prefix + "pdfs/egr-paper.pdf", Astro.site).href;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
-    <link rel="icon" type="image/svg+xml" href={prefix + favicon} />
+    <link rel="icon" href={prefix + "favicon.ico"} sizes="32x32" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href={prefix + "favicon-192.png"}
+    />
+    <link rel="apple-touch-icon" href={prefix + "apple-touch-icon.png"} />
 
     <link rel="canonical" href={canonical} />
 
