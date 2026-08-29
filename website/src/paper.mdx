@@ -12,6 +12,7 @@ import Picture from "./components/Picture.astro";
 import TwoColumns from "./components/TwoColumns.astro";
 import Video from "./components/Video.astro";
 import VideoGrid from "./components/VideoGrid.astro";
+import ResultsTable from "./components/ResultsTable.astro";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/starwind/tabs";
 
 import teaser from "./assets/teaser.png";
@@ -186,25 +187,102 @@ Both suites agree. Vanilla $\pi_{0.5}$ shows the entanglement, and EGR reduces i
 
 ### Suite 2 — task success
 
-| Method | NAV Full | NAV SingleUseful | MAN Full | MAN NoUseless | MAN UsefulOnly |
-| --- | --- | --- | --- | --- | --- |
-| vanilla $\pi_{0.5}$ | **42.3** | 15.5 | 12.5 / **52.8** / **0.25** | 9.4 / 47.2 / 0.26 | 2.8 / 22.8 / 0.45 |
-| ModDrop | 40.0 | 15.5 | 7.5 / 41.0 / 0.29 | 6.8 / 38.9 / 0.29 | 2.8 / 22.4 / 0.47 |
-| **EGR (ours)** | 40.9 | **37.3** | **16.4** / 50.0 / 0.26 | **16.5** / **53.9** / **0.25** | **6.1** / **30.1** / **0.37** |
-
-<span class="block text-center text-base text-muted-foreground">NAV ($n=11$) reports SR. MAN ($n=36$) reports SR&nbsp;↑ / EC&nbsp;↑ / Dist&nbsp;↓. Best per metric per regime in bold.</span>
+<ResultsTable
+  groups={[
+    { label: "NAV · 11 segments", span: 2 },
+    { label: "MAN · 36 segments", span: 3 },
+  ]}
+  columns={["Full", "SingleUseful", "Full", "NoUseless", "UsefulOnly"]}
+  rows={[
+    {
+      label: "vanilla &pi;<sub>0.5</sub>",
+      cells: [
+        { value: "42.3", strong: true },
+        { value: "15.5" },
+        { value: "12.5", sub: "EC 52.8 · Dist 0.25" },
+        { value: "9.4", sub: "EC 47.2 · Dist 0.26" },
+        { value: "2.8", sub: "EC 22.8 · Dist 0.45" },
+      ],
+    },
+    {
+      label: "ModDrop",
+      cells: [
+        { value: "40.0" },
+        { value: "15.5" },
+        { value: "7.5", sub: "EC 41.0 · Dist 0.29" },
+        { value: "6.8", sub: "EC 38.9 · Dist 0.29" },
+        { value: "2.8", sub: "EC 22.4 · Dist 0.47" },
+      ],
+    },
+    {
+      label: "EGR (ours)",
+      highlight: true,
+      cells: [
+        { value: "40.9" },
+        { value: "37.3", strong: true },
+        { value: "16.4", strong: true, sub: "EC 50.0 · Dist 0.26" },
+        { value: "16.5", strong: true, sub: "EC 53.9 · Dist 0.25" },
+        { value: "6.1", strong: true, sub: "EC 30.1 · Dist 0.37" },
+      ],
+    },
+  ]}
+  caption="Rollout evaluation. The headline figure is success rate (%); end-effector contact rate (EC, %) and minimum distance to target (Dist, m) sit underneath for the manipulation regimes. Bold marks the best success rate per regime."
+/>
 
 The headline row: manipulation SR rises **12.5 → 16.4** under full modalities (+31%), **9.4 → 16.5** under NoUseless (+75%), and **2.8 → 6.1** under UsefulOnly (+120%). On navigation, clean performance is essentially preserved (42.3 → 40.9) while SingleUseful more than doubles, **15.5 → 37.3** (+141%).
 
 ### Suite 1 — action deviation
 
-| Method | NAV Full | SingleUseful | Ratio | MAN Full | NoUseless | Ratio | UsefulOnly | Ratio |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| vanilla $\pi_{0.5}$ | 0.0616 | 0.0809 | +31.4% | 0.0020 | 0.0022 | +12.7% | 0.0052 | +158.5% |
-| ModDrop | 0.0853 | 0.1172 | +37.4% | 0.0024 | 0.0026 | +10.9% | 0.0056 | +137.7% |
-| **EGR (ours)** | 0.0780 | 0.0903 | **+15.8%** | 0.0023 | 0.0024 | **+5.1%** | 0.0051 | **+121.8%** |
-
-<span class="block text-center text-base text-muted-foreground">Ratio is the percentage increase in action deviation relative to Full; lower is better.</span>
+<ResultsTable
+  groups={[
+    { label: "NAV", span: 3 },
+    { label: "MAN", span: 5 },
+  ]}
+  columns={["Full", "SingleUseful", "Δ", "Full", "NoUseless", "Δ", "UsefulOnly", "Δ"]}
+  rows={[
+    {
+      label: "vanilla &pi;<sub>0.5</sub>",
+      cells: [
+        { value: "0.0616" },
+        { value: "0.0809" },
+        { value: "+31.4%" },
+        { value: "0.0020" },
+        { value: "0.0022" },
+        { value: "+12.7%" },
+        { value: "0.0052" },
+        { value: "+158.5%" },
+      ],
+    },
+    {
+      label: "ModDrop",
+      cells: [
+        { value: "0.0853" },
+        { value: "0.1172" },
+        { value: "+37.4%" },
+        { value: "0.0024" },
+        { value: "0.0026" },
+        { value: "+10.9%" },
+        { value: "0.0056" },
+        { value: "+137.7%" },
+      ],
+    },
+    {
+      label: "EGR (ours)",
+      highlight: true,
+      cells: [
+        { value: "0.0780" },
+        { value: "0.0903" },
+        { value: "+15.8%", strong: true, tone: "positive" },
+        { value: "0.0023" },
+        { value: "0.0024" },
+        { value: "+5.1%", strong: true, tone: "positive" },
+        { value: "0.0051" },
+        { value: "+121.8%", strong: true, tone: "positive" },
+      ],
+    },
+  ]}
+  caption="Inference-only diagnostic. Δ is the increase in per-frame action deviation relative to Full — how much the policy's action changes when a sensor is perturbed. Lower is better; bold marks the lowest per regime."
+/>
 
 The vanilla rows are the diagnosis: perturbing sensors the filter labeled *useless* still moves the action distribution by +31.4% (NAV) and +12.7% (MAN), and dropping to the single useful sensor moves it by +158.5%. ModDrop shows the same pattern at higher absolute deviation — random modality dropout does not remove the entanglement. EGR lowers every ratio.
 
@@ -222,35 +300,36 @@ We test two platforms with deliberately different embodiments and sensor sets, p
   <span slot="caption">Real-robot results across both platforms, 10 trials per condition. Each pair compares the vanilla baseline (left, gray) against EGR (right, teal); relative gain is printed above each pair.</span>
 </Figure>
 
-<TwoColumns>
-<div slot="left">
-
 ### Bi-manual vision platform
 
-4 tasks × 4 conditions × 10 trials.
+Two Kinova arms and three RGB cameras, on four tasks: stack bowls, put drumstick on plate, put sushi in pot, and close microwave door. Four conditions, 10 trials each.
 
-| Condition | Baseline | EGR | Gain |
-| --- | --- | --- | --- |
-| Clean | 70% | **80%** | +14% |
-| NoUseless | 52.5% | **90%** | +71% |
-| UsefulOnly | 25% | **72.5%** | +190% |
-| RealDistractor | 30% | **85%** | +183% |
-
-</div>
-<div slot="right">
+<ResultsTable
+  rowHeader="Condition"
+  columns={["vanilla π₀.₅", "EGR (ours)", "Relative gain"]}
+  rows={[
+    { label: "Clean", cells: [{ value: "70%" }, { value: "80%", strong: true }, { value: "+14%", tone: "positive" }] },
+    { label: "NoUseless", cells: [{ value: "52.5%" }, { value: "90%", strong: true }, { value: "+71%", tone: "positive" }] },
+    { label: "UsefulOnly", cells: [{ value: "25%" }, { value: "72.5%", strong: true }, { value: "+190%", tone: "positive" }] },
+    { label: "RealDistractor", cells: [{ value: "30%" }, { value: "85%", strong: true }, { value: "+183%", tone: "positive" }] },
+  ]}
+  caption="Success rate averaged over the four tasks, 10 trials per task per condition. RealDistractor places physical objects the policy has never seen into the scene."
+/>
 
 ### Vision-tactile platform
 
-2 tasks × 3 conditions × 10 trials.
+One MELFA ASSISTA arm, one RGB camera, and two GelSight sensors, on two tasks: reading a pencil's serial code and localizing a board crack. Three conditions, 10 trials each.
 
-| Condition | Baseline | EGR | Gain |
-| --- | --- | --- | --- |
-| Clean | 90% | 85% | −6% |
-| SingleUseful | 40% | **90%** | +125% |
-| RealDistractor | 55% | **70%** | +27% |
-
-</div>
-</TwoColumns>
+<ResultsTable
+  rowHeader="Condition"
+  columns={["vanilla π₀.₅", "EGR (ours)", "Relative gain"]}
+  rows={[
+    { label: "Clean", cells: [{ value: "90%", strong: true }, { value: "85%" }, { value: "−6%", tone: "negative" }] },
+    { label: "SingleUseful", cells: [{ value: "40%" }, { value: "90%", strong: true }, { value: "+125%", tone: "positive" }] },
+    { label: "RealDistractor", cells: [{ value: "55%" }, { value: "70%", strong: true }, { value: "+27%", tone: "positive" }] },
+  ]}
+  caption="Success rate averaged over the two tasks, 10 trials per task per condition. The clean drop is within trial noise at this sample size."
+/>
 
 The largest relative gain on both platforms comes on RealDistractor, where the distractor is a physical object the policy has never seen — the strongest out-of-distribution signal available to us. The tactile platform confirms that the gains carry to a sensor combination the vision instantiation never touches.
 
