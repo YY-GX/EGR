@@ -5,9 +5,6 @@ import mdx from "@astrojs/mdx";
 
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import rehypeCitation from "rehype-citation";
-
-import react from "@astrojs/react";
 
 import astroExpressiveCode from "astro-expressive-code";
 
@@ -16,19 +13,13 @@ export default defineConfig({
   site: "https://yy-gx.github.io",
   base: "/EGR",
   vite: {
-    plugins: [tailwindcss()],
+    // rollup's and rolldown's PluginContextMeta types disagree; the plugin runs fine.
+    plugins: [tailwindcss() as never],
   },
   markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [
       rehypeKatex,
-      [
-        rehypeCitation,
-        {
-          bibliography: "bibliography.bib",
-          linkCitations: true,
-        },
-      ],
     ],
   },
   integrations: [
@@ -37,8 +28,7 @@ export default defineConfig({
       styleOverrides: {
         borderRadius: "0.5rem",
         borderWidth: "0",
-        codeBackground: ({ theme }) =>
-          `var(--color-muted)`,
+        codeBackground: "var(--color-muted)",
         frames: {
           shadowColor: "transparent",
         },
@@ -47,7 +37,6 @@ export default defineConfig({
         theme.type === "dark" ? `[data-theme="dark"]` : `[data-theme="light"]`,
     }),
     mdx(),
-    react(),
   ],
   fonts: [
     {

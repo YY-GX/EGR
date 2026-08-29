@@ -35,3 +35,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./website/dist
           publish_branch: gh-pages
+          # Keep a single commit on gh-pages; otherwise every rebuilt image
+          # variant accumulates as a new blob in that branch's history.
+          force_orphan: true

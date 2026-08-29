@@ -1,7 +1,6 @@
 import js from "@eslint/js";
 import globals from "globals";
 import typescript from "typescript-eslint";
-import react from "@eslint-react/eslint-plugin";
 import astro from "eslint-plugin-astro";
 import json from "@eslint/json";
 import markdown from "@eslint/markdown";
@@ -34,7 +33,6 @@ export default defineConfig([
   },
   {
     files: ["**/*.ts", "**/*.tsx"],
-    extends: [react.configs["recommended-typescript"]],
     languageOptions: {
       parser: typescript.parser,
       parserOptions: {

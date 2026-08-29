@@ -1,0 +1,35 @@
+---
+interface Props {
+  lead: string;
+  stats: { value: string; label: string; sub?: string }[];
+}
+
+const { lead, stats } = Astro.props;
+---
+
+<section class="not-prose full-bleed border-border border-y bg-muted/60 py-8">
+  <div class="mx-auto max-w-[64rem] px-6">
+    <p
+      class="text-foreground mx-auto mb-7 max-w-[44rem] text-center text-lg leading-relaxed text-balance"
+    >
+      {lead}
+    </p>
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-7 lg:grid-cols-4">
+      {
+        stats.map((stat) => (
+          <div class="border-primary/50 border-l-2 pl-4">
+            <dd class="text-primary m-0 text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
+              {stat.value}
+            </dd>
+            <dt class="text-foreground mt-1 text-sm leading-snug">
+              {stat.label}
+            </dt>
+            {stat.sub && (
+              <p class="text-muted-foreground m-0 mt-0.5 text-xs">{stat.sub}</p>
+            )}
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

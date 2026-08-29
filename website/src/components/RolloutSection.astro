@@ -1,0 +1,167 @@
+---
+// Rollout comparison for one real-robot platform.
+//
+// The full-sensor reference pair is rendered once per platform rather than
+// repeated inside every condition, so each of the 14 clips is fetched exactly
+// once. Nothing preloads or plays until it scrolls into view, and autoplay is
+// suppressed entirely under prefers-reduced-motion.
+interface Condition {
+  label: string;
+  corruption: string;
+  baselineSr: string;
+  egrSr: string;
+  baseline: string;
+  egr: string;
+}
+
+interface Props {
+  platform: string;
+  sensors: string;
+  speed: string;
+  referenceBaseline: string;
+  referenceEgr: string;
+  conditions: Condition[];
+}
+
+const {
+  platform,
+  sensors,
+  speed,
+  referenceBaseline,
+  referenceEgr,
+  conditions,
+} = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+const prefix = base.endsWith("/") ? base : base + "/";
+const url = (name: string) => `${prefix}videos/${name}`;
+const poster = (name: string) =>
+  `${prefix}videos/posters/${name.replace(/\.mp4$/, ".jpg")}`;
+---
+
+<section class="not-prose my-10">
+  <header class="mb-5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+    <h3 class="text-foreground m-0 text-xl font-medium">{platform}</h3>
+    <p class="text-muted-foreground m-0 text-sm">
+      {sensors}
+      <span
+        class="border-outline/60 text-muted-foreground ml-2 rounded-full border px-2 py-0.5 align-middle text-xs tracking-[0.08em] uppercase"
+        >{speed}</span
+      >
+    </p>
+  </header>
+
+  <div class="border-border bg-muted/50 mb-4 rounded-xl border p-3 sm:p-4">
+    <p
+      class="text-muted-foreground mt-0 mb-3 text-center text-sm tracking-[0.08em] uppercase"
+    >
+      Full sensors — reference
+    </p>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+      {
+        [
+          { tag: "vanilla π₀.₅", src: referenceBaseline, accent: false },
+          { tag: "EGR (ours)", src: referenceEgr, accent: true },
+        ].map((cell) => (
+          <figure class="m-0 flex flex-col gap-1.5">
+            <video
+              class="aspect-[4/3] w-full rounded-lg bg-black object-cover"
+              data-rollout
+              src={url(cell.src)}
+              poster={poster(cell.src)}
+              loop
+              muted
+              playsinline
+              controls
+              preload="none"
+            />
+            <figcaption
+              class:list={[
+                "text-center text-sm",
+                cell.accent ? "text-primary" : "text-muted-foreground",
+              ]}
+            >
+              {cell.tag}
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+
+  {
+    conditions.map((c) => (
+      <div class="border-border mb-4 rounded-xl border p-3 last:mb-0 sm:p-4">
+        <div class="mb-3 text-center">
+          <p class="text-foreground m-0 font-medium">{c.label}</p>
+          <p class="text-muted-foreground m-0 text-sm">{c.corruption}</p>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+          {[
+            { tag: "vanilla π₀.₅", sr: c.baselineSr, src: c.baseline, accent: false },
+            { tag: "EGR (ours)", sr: c.egrSr, src: c.egr, accent: true },
+          ].map((cell) => (
+            <figure
+              class:list={[
+                "m-0 flex flex-col gap-1.5 rounded-lg p-2",
+                cell.accent ? "bg-primary/6" : "bg-muted/60",
+              ]}
+            >
+              <video
+                class="aspect-[4/3] w-full rounded-lg bg-black object-cover"
+                data-rollout
+                src={url(cell.src)}
+                poster={poster(cell.src)}
+                loop
+                muted
+                playsinline
+                controls
+                preload="none"
+              />
+              <figcaption
+                class:list={[
+                  "text-center text-sm",
+                  cell.accent ? "text-primary" : "text-muted-foreground",
+                ]}
+              >
+                {cell.tag} · <span class="tabular-nums">{cell.sr}</span> success
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    ))
+  }
+</section>
+
+<script>
+  // Load and play a clip only while it is on screen. Without this, every clip on
+  // the page downloads and decodes on first paint.
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clips = document.querySelectorAll<HTMLVideoElement>("video[data-rollout]");
+
+  if (!reduced && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting) {
+            if (video.preload !== "auto") video.preload = "auto";
+            video.play().catch(() => {
+              /* autoplay refused — the controls are there */
+            });
+          } else {
+            video.pause();
+          }
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+    clips.forEach((clip) => observer.observe(clip));
+  } else {
+    // Reduced motion, or no observer: leave them paused, but let the controls work.
+    clips.forEach((clip) => {
+      clip.preload = "metadata";
+    });
+  }
+</script>

@@ -7,9 +7,16 @@ interface Props {
   alt: string;
   priority?: boolean;
   invertInDarkMode?: boolean;
+  sizes?: string;
 }
 
-const { src, alt, priority = false, invertInDarkMode = false } = Astro.props;
+const {
+  src,
+  alt,
+  priority = false,
+  invertInDarkMode = false,
+  sizes = "(min-width: 76rem) 72rem, 100vw",
+} = Astro.props;
 
 let image: ImageMetadata;
 
@@ -25,7 +32,9 @@ if (typeof src === "string") {
   src={image}
   alt={alt}
   layout="constrained"
-  formats={["avif"]}
+  formats={["avif", "webp"]}
+  fallbackFormat="webp"
+  sizes={sizes}
   priority={priority}
   fit="contain"
 />

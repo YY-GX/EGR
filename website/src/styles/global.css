@@ -25,7 +25,7 @@ html {
 
 :root {
   color-scheme: light;
-  --maximum-text-width: 50rem;
+  --maximum-text-width: 44rem;
   --minimum-inline-margin: 1.5rem;
   --actual-inline-margin: max(
     var(--minimum-inline-margin),
@@ -132,9 +132,9 @@ main .katex-display {
   --error: #b8482c;
   --error-foreground: #fdf9f1;
   /* hairlines */
-  --border: #c9c3bc;
-  --input: #c9c3bc;
-  --outline: #9f978f;
+  --border: #bdb5ac;
+  --input: #bdb5ac;
+  --outline: #6f6862;
   --radius: 0.625rem;
 }
 
@@ -210,8 +210,10 @@ main .katex-display {
   }
 }
 
-/* Bind Tailwind Typography to the palette above so prose text is ink, not zinc. */
-:root {
+/* Bind Tailwind Typography to the palette above so prose text is ink, not zinc.
+   This must sit on `body.prose`, not `:root`: the plugin defines these same
+   variables on the .prose element itself, which would shadow an inherited value. */
+body.prose {
   --tw-prose-body: var(--foreground);
   --tw-prose-headings: var(--foreground);
   --tw-prose-lead: var(--muted-foreground);
@@ -241,6 +243,42 @@ h3,
 h4 {
   letter-spacing: -0.015em;
   font-weight: 500;
+}
+
+/* Section headings need to outrank subheads by more than 30px vs 24px at the
+   same weight, or a 10,000px page has no landmarks. */
+.prose h2 {
+  font-size: 2rem;
+  line-height: 1.15;
+}
+
+.prose h3 {
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+/* A hairline above each top-level section. Headings inside the tinted bands are
+   direct children of the band, not of <main>, so they are excluded. */
+main > h2 {
+  margin-top: 4.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 4.5rem;
+}
+
+/* Two tinted bands in a row read as one chapter, not two stripes. */
+main > .full-bleed + .full-bleed {
+  margin-top: 0;
+}
+
+main > .full-bleed + h2 {
+  margin-top: 3rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+main > h3 {
+  scroll-margin-top: 4.5rem;
 }
 
 code,
