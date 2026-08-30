@@ -1,0 +1,15 @@
+---
+---
+
+<figure class="full-bleed my-12">
+  <div
+    class="mx-auto flex w-full max-w-[72rem] justify-start overflow-x-auto px-6 **:my-0 [&_img]:min-w-[36rem] sm:[&_img]:min-w-0 sm:justify-center"
+  >
+    <slot name="figure" />
+  </div>
+  <figcaption
+    class="text-muted-foreground mx-auto mt-4 max-w-[calc(var(--maximum-text-width)*0.9)] px-6 text-left text-[0.9375rem] leading-[1.6]"
+  >
+    <slot name="caption" />
+  </figcaption>
+</figure>
